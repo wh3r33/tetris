@@ -209,16 +209,10 @@ row.every(Boolean)
 
 # Демо
 
-GitHub Repository:
-
-```text
-https://github.com/wh3r33/tetris
-```
-
 GitHub Pages:
 
 ```text
-https://USERNAME.github.io/tetris/
+[https://USERNAME.github.io/tetris/](https://wh3r33.github.io/tetris/)
 ```
 
 # Known Limitations
