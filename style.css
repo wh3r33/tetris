@@ -84,13 +84,14 @@ select {
 .app-shell {
   position: relative;
   z-index: 1;
-  width: min(1040px, calc(100vw - 28px));
+  width: min(1120px, calc(100vw - 28px));
   min-height: 100vh;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(310px, 440px) minmax(280px, 360px);
+  grid-template-columns: minmax(440px, 540px) minmax(280px, 360px);
   gap: 28px;
-  align-items: center;
+  align-items: stretch;
+  align-content: center;
   justify-content: center;
   padding: 28px 0;
 }
@@ -98,7 +99,11 @@ select {
 .game-area {
   position: relative;
   min-width: 0;
-  padding: 0 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
 }
 
 .game-area::before,
@@ -170,17 +175,24 @@ select {
 }
 
 .board-wrap {
-  width: min(100%, 404px);
+  width: auto;
+  height: min(100%, 1000px);
+  max-width: 100%;
   margin: 0 auto;
   padding: var(--border);
   overflow: hidden;
   aspect-ratio: 1 / 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #gameCanvas {
   display: block;
-  width: 100%;
+  width: auto;
   height: 100%;
+  max-width: 100%;
+  aspect-ratio: 1 / 2;
   background: var(--bone);
   touch-action: none;
 }
@@ -376,6 +388,16 @@ select {
     order: 2;
   }
 
+  .board-wrap {
+    height: auto;
+    max-height: none;
+  }
+
+  #gameCanvas {
+    width: 100%;
+    height: auto;
+  }
+
   .title-block {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -392,11 +414,11 @@ select {
 
 @media (max-width: 430px) {
   .game-area {
-    padding: 0 24px;
+    padding: 0 18px;
   }
 
   .board-wrap {
-    width: min(100%, calc(100vw - 132px));
+    width: min(100%, calc(100vw - 84px));
   }
 
   .game-area::before,
