@@ -1,29 +1,85 @@
-2<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Canvas Tetris</title>
+  <title>Tetris</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body>
+  <section id="introScreen" class="intro-screen" aria-label="Welcome screen">
+    <div class="intro-grid" aria-hidden="true"></div>
+    <div class="intro-scribble intro-scribble-one" aria-hidden="true"></div>
+    <div class="intro-scribble intro-scribble-two" aria-hidden="true"></div>
+
+    <div class="intro-topbar">
+      <span class="intro-kicker">01 / TETRIS</span>
+      <button id="introLanguageButton" class="intro-language" type="button" data-i18n="intro.languageToggle">RU</button>
+    </div>
+
+    <div class="intro-layout">
+      <header class="intro-title-block">
+        <p class="intro-label" data-i18n="intro.posterLabel">Falling blocks study</p>
+        <h1 data-i18n="intro.title">TETRIS</h1>
+        <p class="intro-subtitle" data-i18n="intro.subtitle">Classic puzzle game</p>
+      </header>
+
+      <section class="intro-copy" aria-label="Game description">
+        <p data-i18n="intro.description.line1">Arrange falling tetrominoes to complete horizontal lines.</p>
+        <p data-i18n="intro.description.line2">Completed lines disappear and award points.</p>
+        <p data-i18n="intro.description.line3">The game speeds up as your level increases.</p>
+        <p data-i18n="intro.description.line4">Use strategy, planning, and quick reactions to survive.</p>
+      </section>
+
+      <section class="intro-howto" aria-label="How to play">
+        <h2 data-i18n="intro.howToTitle">How to play</h2>
+        <dl>
+          <div><dt data-i18n="controls.move">Move</dt><dd data-i18n="controls.moveKeys">Left / Right</dd></div>
+          <div><dt data-i18n="controls.softDrop">Soft Drop</dt><dd data-i18n="controls.softDropKeys">Down</dd></div>
+          <div><dt data-i18n="controls.rotate">Rotate</dt><dd data-i18n="controls.rotateKeys">Up / X</dd></div>
+          <div><dt data-i18n="controls.hardDrop">Hard Drop</dt><dd data-i18n="controls.hardDropKeys">Space</dd></div>
+          <div><dt data-i18n="controls.holdPiece">Hold Piece</dt><dd data-i18n="controls.holdPieceKeys">C</dd></div>
+          <div><dt data-i18n="controls.pause">Pause</dt><dd data-i18n="controls.pauseKeys">P / Esc</dd></div>
+        </dl>
+      </section>
+
+      <section class="intro-screenshots" aria-label="Screenshots">
+        <div class="screenshot-slot" data-slot="1">
+          <img class="screenshot-image" src="screenshot/a.png" alt="Gameplay Screenshot 1">
+          <div class="screenshot-placeholder"><span data-i18n="intro.screenshotSlot1">Screenshot Slot 1</span></div>
+        </div>
+        <div class="screenshot-slot" data-slot="2">
+          <img class="screenshot-image" src="screenshot/b.png" alt="Gameplay Screenshot 2">
+          <div class="screenshot-placeholder"><span data-i18n="intro.screenshotSlot2">Screenshot Slot 2</span></div>
+        </div>
+        <div class="screenshot-slot" data-slot="3">
+          <img class="screenshot-image" src="screenshot/c.png" alt="Gameplay Screenshot 3">
+          <div class="screenshot-placeholder"><span data-i18n="intro.screenshotSlot3">Screenshot Slot 3</span></div>
+        </div>
+      </section>
+
+      <button id="introContinueButton" class="intro-continue" type="button" data-i18n="intro.continue">Continue</button>
+    </div>
+  </section>
+
   <main class="app-shell">
     <section class="game-area" aria-label="Tetris game">
       <div class="board-wrap">
         <canvas id="gameCanvas" width="320" height="640" aria-label="Tetris board"></canvas>
         <div id="overlay" class="overlay hidden">
           <div class="overlay-panel">
-            <h1 id="overlayTitle">Paused</h1>
-            <p id="overlayText">Press P or Escape to resume.</p>
-            <button id="overlayRestart" type="button">Restart</button>
+            <h1 id="overlayTitle" data-i18n="overlay.pausedTitle">Paused</h1>
+            <p id="overlayText" data-i18n="overlay.pausedText">Press P or Escape to resume.</p>
+            <button id="overlayRestart" type="button" data-i18n="actions.restart">Restart</button>
           </div>
         </div>
       </div>
 
       <div class="mobile-controls" aria-label="Touch control hints">
-        <span>SWIPE</span>
-        <span>TAP</span>
-        <span>DROP</span>
+        <span data-i18n="touch.swipe">SWIPE</span>
+        <span data-i18n="touch.tap">TAP</span>
+        <span data-i18n="touch.drop">DROP</span>
       </div>
     </section>
 
@@ -36,60 +92,65 @@
 
       <section class="stats-grid" aria-label="Stats">
         <div>
-          <span>SCORE</span>
+          <span data-i18n="stats.score">SCORE</span>
           <strong id="score">0</strong>
         </div>
         <div>
-          <span>LEVEL</span>
+          <span data-i18n="stats.level">LEVEL</span>
           <strong id="level">1</strong>
         </div>
         <div>
-          <span>LINES</span>
+          <span data-i18n="stats.lines">LINES</span>
           <strong id="lines">0</strong>
         </div>
       </section>
 
       <section class="preview-grid">
         <div class="preview-card">
-          <h2>NEXT</h2>
+          <h2 data-i18n="panels.next">NEXT</h2>
           <canvas id="nextCanvas" width="128" height="128" aria-label="Next piece preview"></canvas>
         </div>
         <div class="preview-card">
-          <h2>HOLD</h2>
+          <h2 data-i18n="panels.hold">HOLD</h2>
           <canvas id="holdCanvas" width="128" height="128" aria-label="Held piece preview"></canvas>
         </div>
       </section>
 
       <section class="controls-card">
-        <h2>CONTROL</h2>
+        <h2 data-i18n="panels.control">CONTROL</h2>
         <dl>
-          <div><dt>MOVE</dt><dd>LEFT / RIGHT</dd></div>
-          <div><dt>SOFT</dt><dd>DOWN</dd></div>
-          <div><dt>TURN</dt><dd>UP / X</dd></div>
-          <div><dt>DROP</dt><dd>SPACE</dd></div>
-          <div><dt>HOLD</dt><dd>C</dd></div>
-          <div><dt>STOP</dt><dd>P / ESC</dd></div>
+          <div><dt data-i18n="controls.moveShort">MOVE</dt><dd data-i18n="controls.moveKeys">LEFT / RIGHT</dd></div>
+          <div><dt data-i18n="controls.softShort">SOFT</dt><dd data-i18n="controls.softDropKeys">DOWN</dd></div>
+          <div><dt data-i18n="controls.rotateShort">TURN</dt><dd data-i18n="controls.rotateKeys">UP / X</dd></div>
+          <div><dt data-i18n="controls.dropShort">DROP</dt><dd data-i18n="controls.hardDropKeys">SPACE</dd></div>
+          <div><dt data-i18n="controls.holdShort">HOLD</dt><dd data-i18n="controls.holdPieceKeys">C</dd></div>
+          <div><dt data-i18n="controls.pauseShort">STOP</dt><dd data-i18n="controls.pauseKeys">P / ESC</dd></div>
         </dl>
       </section>
 
       <section class="actions-row">
-        <label for="themeSelect">MODE</label>
+        <label for="themeSelect" data-i18n="settings.mode">MODE</label>
         <select id="themeSelect" aria-label="Theme selector">
-          <option value="gameboy">VECTOR BOY</option>
+          <option value="modern" data-i18n="themes.modern">MODERN</option>
+          <option value="gameboy" data-i18n="themes.gameboy">VECTOR BOY</option>
+          <option value="ascii" data-i18n="themes.ascii">ASCII</option>
         </select>
-        <button id="restartButton" type="button">RESET</button>
+        <button id="showIntroButton" type="button" data-i18n="settings.showIntro">SHOW INTRO AGAIN</button>
+        <button id="restartButton" type="button" data-i18n="actions.reset">RESET</button>
       </section>
 
       <section class="leaderboard-card">
         <div class="section-title">
-          <h2>RANK</h2>
-          <button id="clearLeaderboard" type="button">CLEAR</button>
+          <h2 data-i18n="panels.rank">RANK</h2>
+          <button id="clearLeaderboard" type="button" data-i18n="actions.clear">CLEAR</button>
         </div>
         <ol id="leaderboard"></ol>
       </section>
     </aside>
   </main>
 
+  <script src="localization.js"></script>
+  <script src="intro-screen.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

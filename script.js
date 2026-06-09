@@ -10,6 +10,8 @@ const CONFIG = {
   lineClearAnimationMs: 220,
   leaderboardSize: 10,
   storageKeys: {
+    introViewed: "canvas-tetris-intro-viewed",
+    language: "canvas-tetris-language",
     leaderboard: "canvas-tetris-leaderboard",
     theme: "canvas-tetris-theme"
   }
@@ -41,10 +43,20 @@ const THEME_COLORS = {
     ghost: "#2C2C2C",
     flash: "#2C2C2C",
     pieces: Object.fromEntries(Object.keys(TETROMINOES).map((type) => [type, "#2C2C2C"]))
+  },
+  ascii: {
+    board: "#050805",
+    grid: "#1F6F37",
+    ghost: "#4EF17F",
+    flash: "#FFFFFF",
+    pieces: Object.fromEntries(Object.keys(TETROMINOES).map((type) => [type, "#8CFF9C"]))
   }
 };
 
 const dom = {
+  introScreen: document.getElementById("introScreen"),
+  introContinueButton: document.getElementById("introContinueButton"),
+  introLanguageButton: document.getElementById("introLanguageButton"),
   gameCanvas: document.getElementById("gameCanvas"),
   nextCanvas: document.getElementById("nextCanvas"),
   holdCanvas: document.getElementById("holdCanvas"),
@@ -56,6 +68,7 @@ const dom = {
   overlayText: document.getElementById("overlayText"),
   overlayRestart: document.getElementById("overlayRestart"),
   restartButton: document.getElementById("restartButton"),
+  showIntroButton: document.getElementById("showIntroButton"),
   leaderboard: document.getElementById("leaderboard"),
   clearLeaderboard: document.getElementById("clearLeaderboard"),
   themeSelect: document.getElementById("themeSelect")
@@ -159,6 +172,18 @@ class StorageManager {
     localStorage.setItem(CONFIG.storageKeys.theme, theme);
   }
 
+  getLanguage() {
+    return localStorage.getItem(CONFIG.storageKeys.language) || "en";
+  }
+
+  hasViewedIntro() {
+    return localStorage.getItem(CONFIG.storageKeys.introViewed) === "true";
+  }
+
+  setIntroViewed() {
+    localStorage.setItem(CONFIG.storageKeys.introViewed, "true");
+  }
+
   getLeaderboard() {
     try {
       return JSON.parse(localStorage.getItem(CONFIG.storageKeys.leaderboard)) || [];
@@ -167,9 +192,9 @@ class StorageManager {
     }
   }
 
-  saveScore(score) {
+  saveScore(score, promptMessage) {
     if (score <= 0) return;
-    const initials = this.getInitials();
+    const initials = this.getInitials(promptMessage);
     const entry = {
       initials,
       score,
@@ -181,13 +206,31 @@ class StorageManager {
     localStorage.setItem(CONFIG.storageKeys.leaderboard, JSON.stringify(leaders));
   }
 
-  getInitials() {
-    const value = window.prompt("New high score! Enter initials:", "AAA") || "AAA";
+  getInitials(message = "New high score! Enter initials:") {
+    const value = window.prompt(message, "AAA") || "AAA";
     return value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 3).padEnd(3, "A");
   }
 
   clearLeaderboard() {
     localStorage.removeItem(CONFIG.storageKeys.leaderboard);
+  }
+}
+
+class ThemeManager {
+  constructor(select, renderer, storage) {
+    this.select = select;
+    this.renderer = renderer;
+    this.storage = storage;
+  }
+
+  apply(theme) {
+    const selectedTheme = THEME_COLORS[theme] ? theme : "gameboy";
+    document.body.classList.toggle("theme-modern", selectedTheme === "modern");
+    document.body.classList.toggle("theme-gameboy", selectedTheme === "gameboy");
+    document.body.classList.toggle("theme-ascii", selectedTheme === "ascii");
+    this.select.value = selectedTheme;
+    this.renderer.setTheme(selectedTheme);
+    this.storage.setTheme(selectedTheme);
   }
 }
 
@@ -505,6 +548,16 @@ class Renderer {
     const px = x * size;
     const py = y * size;
     this.ctx.save();
+    if (this.theme === "ascii") {
+      this.ctx.globalAlpha = alpha;
+      this.ctx.fillStyle = color;
+      this.ctx.font = `${Math.floor(size * 0.72)}px ${getComputedStyle(document.body).fontFamily}`;
+      this.ctx.textAlign = "center";
+      this.ctx.textBaseline = "middle";
+      this.ctx.fillText(isGhost ? "." : "#", px + size / 2, py + size / 2 + 1);
+      this.ctx.restore();
+      return;
+    }
     this.ctx.strokeStyle = color;
     this.ctx.fillStyle = color;
     this.ctx.lineWidth = isGhost ? 2 : 4;
@@ -563,6 +616,15 @@ class Renderer {
 
   drawTile(ctx, x, y, size, color) {
     ctx.save();
+    if (this.theme === "ascii") {
+      ctx.fillStyle = color;
+      ctx.font = `${Math.floor(size * 0.72)}px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("#", x + size / 2, y + size / 2 + 1);
+      ctx.restore();
+      return;
+    }
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
     ctx.lineWidth = Math.max(2, Math.floor(size / 8));
@@ -577,15 +639,25 @@ class App {
   constructor() {
     this.audio = new AudioManager();
     this.storage = new StorageManager();
+    this.i18n = new LocalizationManager(translations, CONFIG.storageKeys.language);
     this.game = new TetrisGame(this.audio);
     this.renderer = new Renderer(dom.gameCanvas, dom.nextCanvas, dom.holdCanvas);
+    this.themeManager = new ThemeManager(dom.themeSelect, this.renderer, this.storage);
     this.lastFrame = 0;
     this.dropAccumulator = 0;
     this.touchStart = null;
     this.scoreSaved = false;
+    this.intro = new IntroScreen({
+      element: dom.introScreen,
+      continueButton: dom.introContinueButton,
+      languageButton: dom.introLanguageButton,
+      storage: this.storage,
+      i18n: this.i18n
+    });
 
     this.applyTheme(this.storage.getTheme());
     this.bindEvents();
+    this.i18n.setLanguage(this.storage.getLanguage());
     this.updateHud();
     this.renderLeaderboard();
     requestAnimationFrame((time) => this.loop(time));
@@ -595,17 +667,21 @@ class App {
     document.addEventListener("keydown", (event) => this.handleKey(event));
     dom.restartButton.addEventListener("click", () => this.restart());
     dom.overlayRestart.addEventListener("click", () => this.restart());
+    dom.showIntroButton.addEventListener("click", () => this.showIntroAgain());
     dom.clearLeaderboard.addEventListener("click", () => {
       this.storage.clearLeaderboard();
       this.renderLeaderboard();
     });
     dom.themeSelect.addEventListener("change", () => this.applyTheme(dom.themeSelect.value));
+    window.addEventListener("languagechange", () => this.refreshLocalizedUi());
+    window.addEventListener("introcomplete", () => this.startAfterIntro());
 
     dom.gameCanvas.addEventListener("touchstart", (event) => this.handleTouchStart(event), { passive: false });
     dom.gameCanvas.addEventListener("touchend", (event) => this.handleTouchEnd(event), { passive: false });
   }
 
   handleKey(event) {
+    if (this.intro.isVisible) return;
     if (["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", " ", "Escape"].includes(event.key)) {
       event.preventDefault();
     }
@@ -647,6 +723,7 @@ class App {
   }
 
   handleTouchStart(event) {
+    if (this.intro.isVisible) return;
     event.preventDefault();
     this.audio.ensureContext();
     const touch = event.changedTouches[0];
@@ -686,7 +763,7 @@ class App {
     const delta = now - this.lastFrame || 0;
     this.lastFrame = now;
 
-    if (!this.game.isPaused && !this.game.isGameOver && !this.game.clearAnimation) {
+    if (!this.intro.isVisible && !this.game.isPaused && !this.game.isGameOver && !this.game.clearAnimation) {
       this.dropAccumulator += delta;
       if (this.dropAccumulator >= this.game.getDropInterval()) {
         this.game.move(0, 1);
@@ -710,20 +787,20 @@ class App {
   updateOverlay() {
     if (this.game.isGameOver) {
       if (!this.scoreSaved) {
-        this.storage.saveScore(this.game.score);
+        this.storage.saveScore(this.game.score, this.i18n.t("leaderboard.prompt"));
         this.renderLeaderboard();
         this.scoreSaved = true;
       }
       dom.overlay.classList.remove("hidden");
-      dom.overlayTitle.textContent = "Game Over";
-      dom.overlayText.textContent = `Final score: ${this.game.score.toLocaleString()}`;
+      dom.overlayTitle.textContent = this.i18n.t("overlay.gameOverTitle");
+      dom.overlayText.textContent = this.i18n.t("overlay.finalScore", { score: this.game.score.toLocaleString() });
       return;
     }
 
     if (this.game.isPaused) {
       dom.overlay.classList.remove("hidden");
-      dom.overlayTitle.textContent = "Paused";
-      dom.overlayText.textContent = "Press P or Escape to resume.";
+      dom.overlayTitle.textContent = this.i18n.t("overlay.pausedTitle");
+      dom.overlayText.textContent = this.i18n.t("overlay.pausedText");
     } else {
       dom.overlay.classList.add("hidden");
     }
@@ -734,7 +811,7 @@ class App {
     dom.leaderboard.innerHTML = "";
     if (leaders.length === 0) {
       const item = document.createElement("li");
-      item.innerHTML = "<span>No scores yet</span>";
+      item.innerHTML = `<span>${this.i18n.t("leaderboard.empty")}</span>`;
       dom.leaderboard.appendChild(item);
       return;
     }
@@ -750,11 +827,7 @@ class App {
   }
 
   applyTheme(theme) {
-    const selectedTheme = THEME_COLORS[theme] ? theme : "gameboy";
-    document.body.classList.toggle("theme-gameboy", selectedTheme === "gameboy");
-    dom.themeSelect.value = selectedTheme;
-    this.renderer.setTheme(selectedTheme);
-    this.storage.setTheme(selectedTheme);
+    this.themeManager.apply(theme);
   }
 
   restart() {
@@ -762,6 +835,22 @@ class App {
     this.scoreSaved = false;
     this.dropAccumulator = 0;
     this.updateHud();
+    this.updateOverlay();
+  }
+
+  startAfterIntro() {
+    this.restart();
+  }
+
+  showIntroAgain() {
+    this.game.isPaused = true;
+    this.intro.show();
+    this.updateOverlay();
+  }
+
+  refreshLocalizedUi() {
+    this.i18n.apply();
+    this.renderLeaderboard();
     this.updateOverlay();
   }
 }
