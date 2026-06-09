@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas Tetris</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="game-area" aria-label="Tetris game">
+      <div class="board-wrap">
+        <canvas id="gameCanvas" width="320" height="640" aria-label="Tetris board"></canvas>
+        <div id="overlay" class="overlay hidden">
+          <div class="overlay-panel">
+            <h1 id="overlayTitle">Paused</h1>
+            <p id="overlayText">Press P or Escape to resume.</p>
+            <button id="overlayRestart" type="button">Restart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-controls" aria-label="Touch control hints">
+        <span>Swipe to move</span>
+        <span>Tap to rotate</span>
+        <span>Long swipe down to drop</span>
+      </div>
+    </section>
+
+    <aside class="side-panel" aria-label="Game information">
+      <header class="title-block">
+        <p class="eyebrow">HTML5 Canvas</p>
+        <h1>Tetris</h1>
+      </header>
+
+      <section class="stats-grid" aria-label="Stats">
+        <div>
+          <span>Score</span>
+          <strong id="score">0</strong>
+        </div>
+        <div>
+          <span>Level</span>
+          <strong id="level">1</strong>
+        </div>
+        <div>
+          <span>Lines</span>
+          <strong id="lines">0</strong>
+        </div>
+      </section>
+
+      <section class="preview-grid">
+        <div class="preview-card">
+          <h2>Next</h2>
+          <canvas id="nextCanvas" width="128" height="128" aria-label="Next piece preview"></canvas>
+        </div>
+        <div class="preview-card">
+          <h2>Hold</h2>
+          <canvas id="holdCanvas" width="128" height="128" aria-label="Held piece preview"></canvas>
+        </div>
+      </section>
+
+      <section class="controls-card">
+        <h2>Controls</h2>
+        <dl>
+          <div><dt>Move</dt><dd>Left / Right</dd></div>
+          <div><dt>Soft drop</dt><dd>Down</dd></div>
+          <div><dt>Rotate</dt><dd>Up / X</dd></div>
+          <div><dt>Hard drop</dt><dd>Space</dd></div>
+          <div><dt>Hold</dt><dd>C</dd></div>
+          <div><dt>Pause</dt><dd>P / Esc</dd></div>
+        </dl>
+      </section>
+
+      <section class="actions-row">
+        <label for="themeSelect">Theme</label>
+        <select id="themeSelect" aria-label="Theme selector">
+          <option value="modern">Modern Color</option>
+          <option value="gameboy">Classic Game Boy</option>
+        </select>
+        <button id="restartButton" type="button">Restart</button>
+      </section>
+
+      <section class="leaderboard-card">
+        <div class="section-title">
+          <h2>Leaderboard</h2>
+          <button id="clearLeaderboard" type="button">Clear</button>
+        </div>
+        <ol id="leaderboard"></ol>
+      </section>
+    </aside>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
