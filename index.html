@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+2<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -21,69 +21,69 @@
       </div>
 
       <div class="mobile-controls" aria-label="Touch control hints">
-        <span>Swipe to move</span>
-        <span>Tap to rotate</span>
-        <span>Long swipe down to drop</span>
+        <span>SWIPE</span>
+        <span>TAP</span>
+        <span>DROP</span>
       </div>
     </section>
 
     <aside class="side-panel" aria-label="Game information">
       <header class="title-block">
-        <p class="eyebrow">HTML5 Canvas</p>
-        <h1>Tetris</h1>
+        <p class="word-box word-box-dark">READY</p>
+        <p class="word-box">PLAYER</p>
+        <p class="word-box word-box-dark">ONE</p>
       </header>
 
       <section class="stats-grid" aria-label="Stats">
         <div>
-          <span>Score</span>
+          <span>SCORE</span>
           <strong id="score">0</strong>
         </div>
         <div>
-          <span>Level</span>
+          <span>LEVEL</span>
           <strong id="level">1</strong>
         </div>
         <div>
-          <span>Lines</span>
+          <span>LINES</span>
           <strong id="lines">0</strong>
         </div>
       </section>
 
       <section class="preview-grid">
         <div class="preview-card">
-          <h2>Next</h2>
+          <h2>NEXT</h2>
           <canvas id="nextCanvas" width="128" height="128" aria-label="Next piece preview"></canvas>
         </div>
         <div class="preview-card">
-          <h2>Hold</h2>
+          <h2>HOLD</h2>
           <canvas id="holdCanvas" width="128" height="128" aria-label="Held piece preview"></canvas>
         </div>
       </section>
 
       <section class="controls-card">
-        <h2>Controls</h2>
+        <h2>CONTROL</h2>
         <dl>
-          <div><dt>Move</dt><dd>Left / Right</dd></div>
-          <div><dt>Soft drop</dt><dd>Down</dd></div>
-          <div><dt>Rotate</dt><dd>Up / X</dd></div>
-          <div><dt>Hard drop</dt><dd>Space</dd></div>
-          <div><dt>Hold</dt><dd>C</dd></div>
-          <div><dt>Pause</dt><dd>P / Esc</dd></div>
+          <div><dt>MOVE</dt><dd>LEFT / RIGHT</dd></div>
+          <div><dt>SOFT</dt><dd>DOWN</dd></div>
+          <div><dt>TURN</dt><dd>UP / X</dd></div>
+          <div><dt>DROP</dt><dd>SPACE</dd></div>
+          <div><dt>HOLD</dt><dd>C</dd></div>
+          <div><dt>STOP</dt><dd>P / ESC</dd></div>
         </dl>
       </section>
 
       <section class="actions-row">
-        <label for="themeSelect">Theme</label>
+        <label for="themeSelect">MODE</label>
         <select id="themeSelect" aria-label="Theme selector">
-          <option value="modern">Modern Color</option>
-          <option value="gameboy">Classic Game Boy</option>
+          <option value="gameboy">VECTOR BOY</option>
         </select>
-        <button id="restartButton" type="button">Restart</button>
+        <button id="restartButton" type="button">RESET</button>
       </section>
 
       <section class="leaderboard-card">
         <div class="section-title">
-          <h2>Leaderboard</h2>
-          <button id="clearLeaderboard" type="button">Clear</button>
+          <h2>RANK</h2>
+          <button id="clearLeaderboard" type="button">CLEAR</button>
         </div>
         <ol id="leaderboard"></ol>
       </section>

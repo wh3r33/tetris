@@ -18,37 +18,29 @@ const CONFIG = {
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
 const TETROMINOES = {
-  I: { color: "#38bdf8", matrix: [[1, 1, 1, 1]] },
-  O: { color: "#facc15", matrix: [[1, 1], [1, 1]] },
-  T: { color: "#c084fc", matrix: [[0, 1, 0], [1, 1, 1]] },
-  L: { color: "#fb923c", matrix: [[0, 0, 1], [1, 1, 1]] },
-  J: { color: "#60a5fa", matrix: [[1, 0, 0], [1, 1, 1]] },
-  S: { color: "#4ade80", matrix: [[0, 1, 1], [1, 1, 0]] },
-  Z: { color: "#f87171", matrix: [[1, 1, 0], [0, 1, 1]] }
+  I: { color: "#2C2C2C", matrix: [[1, 1, 1, 1]] },
+  O: { color: "#2C2C2C", matrix: [[1, 1], [1, 1]] },
+  T: { color: "#2C2C2C", matrix: [[0, 1, 0], [1, 1, 1]] },
+  L: { color: "#2C2C2C", matrix: [[0, 0, 1], [1, 1, 1]] },
+  J: { color: "#2C2C2C", matrix: [[1, 0, 0], [1, 1, 1]] },
+  S: { color: "#2C2C2C", matrix: [[0, 1, 1], [1, 1, 0]] },
+  Z: { color: "#2C2C2C", matrix: [[1, 1, 0], [0, 1, 1]] }
 };
 
 const THEME_COLORS = {
   modern: {
-    board: "#07090d",
-    grid: "rgba(255,255,255,0.08)",
-    ghost: "rgba(255,255,255,0.26)",
-    flash: "rgba(255,255,255,0.78)",
-    pieces: Object.fromEntries(Object.entries(TETROMINOES).map(([type, data]) => [type, data.color]))
+    board: "#EAE5D9",
+    grid: "#2C2C2C",
+    ghost: "#2C2C2C",
+    flash: "#2C2C2C",
+    pieces: Object.fromEntries(Object.keys(TETROMINOES).map((type) => [type, "#2C2C2C"]))
   },
   gameboy: {
-    board: "#0f380f",
-    grid: "rgba(155,188,15,0.18)",
-    ghost: "rgba(155,188,15,0.26)",
-    flash: "rgba(224,248,208,0.8)",
-    pieces: {
-      I: "#9bbc0f",
-      O: "#e0f8d0",
-      T: "#8bac0f",
-      L: "#c6dc43",
-      J: "#9bbc0f",
-      S: "#8bac0f",
-      Z: "#306230"
-    }
+    board: "#EAE5D9",
+    grid: "#2C2C2C",
+    ghost: "#2C2C2C",
+    flash: "#2C2C2C",
+    pieces: Object.fromEntries(Object.keys(TETROMINOES).map((type) => [type, "#2C2C2C"]))
   }
 };
 
@@ -159,7 +151,8 @@ class AudioManager {
 
 class StorageManager {
   getTheme() {
-    return localStorage.getItem(CONFIG.storageKeys.theme) || "modern";
+    const saved = localStorage.getItem(CONFIG.storageKeys.theme);
+    return THEME_COLORS[saved] ? saved : "gameboy";
   }
 
   setTheme(theme) {
@@ -435,7 +428,7 @@ class Renderer {
   }
 
   colors() {
-    return THEME_COLORS[this.theme];
+    return THEME_COLORS[this.theme] || THEME_COLORS.gameboy;
   }
 
   pieceColor(type, fallback) {
@@ -462,6 +455,7 @@ class Renderer {
   drawGrid() {
     this.ctx.strokeStyle = this.colors().grid;
     this.ctx.lineWidth = 1;
+    this.ctx.setLineDash([]);
     for (let x = 0; x <= CONFIG.columns; x += 1) {
       this.ctx.beginPath();
       this.ctx.moveTo(x * CONFIG.cellSize + 0.5, 0);
@@ -511,33 +505,71 @@ class Renderer {
     const px = x * size;
     const py = y * size;
     this.ctx.save();
-    this.ctx.globalAlpha = alpha;
+    this.ctx.strokeStyle = color;
     this.ctx.fillStyle = color;
-    this.ctx.fillRect(px + 2, py + 2, size - 4, size - 4);
-    this.ctx.strokeStyle = isGhost ? color : "rgba(255,255,255,0.24)";
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(px + 3, py + 3, size - 6, size - 6);
+    this.ctx.lineWidth = isGhost ? 2 : 4;
+    this.ctx.setLineDash(isGhost ? [5, 5] : []);
+    this.ctx.strokeRect(px + 6, py + 6, size - 12, size - 12);
+    this.ctx.setLineDash([]);
+    if (!isGhost) {
+      const dot = Math.max(4, Math.floor(size / 6));
+      this.ctx.fillRect(px + (size - dot) / 2, py + (size - dot) / 2, dot, dot);
+    }
     this.ctx.restore();
   }
 
   drawPreview(ctx, piece) {
     ctx.fillStyle = this.colors().board;
     ctx.fillRect(0, 0, 128, 128);
+    this.drawPreviewGrid(ctx);
     if (!piece) return;
 
     const matrix = piece.matrix;
     const cell = CONFIG.previewCellSize;
     const offsetX = (128 - matrix[0].length * cell) / 2;
     const offsetY = (128 - matrix.length * cell) / 2;
-    ctx.fillStyle = this.pieceColor(piece.type, piece.color);
     matrix.forEach((row, y) => {
       row.forEach((value, x) => {
         if (!value) return;
-        ctx.fillRect(offsetX + x * cell + 2, offsetY + y * cell + 2, cell - 4, cell - 4);
-        ctx.strokeStyle = "rgba(255,255,255,0.25)";
-        ctx.strokeRect(offsetX + x * cell + 3, offsetY + y * cell + 3, cell - 6, cell - 6);
+        this.drawTile(
+          ctx,
+          offsetX + x * cell,
+          offsetY + y * cell,
+          cell,
+          this.pieceColor(piece.type, piece.color)
+        );
       });
     });
+  }
+
+  drawPreviewGrid(ctx) {
+    ctx.save();
+    ctx.strokeStyle = this.colors().grid;
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= 128; x += CONFIG.previewCellSize) {
+      ctx.beginPath();
+      ctx.moveTo(x + 0.5, 0);
+      ctx.lineTo(x + 0.5, 128);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= 128; y += CONFIG.previewCellSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y + 0.5);
+      ctx.lineTo(128, y + 0.5);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  drawTile(ctx, x, y, size, color) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = Math.max(2, Math.floor(size / 8));
+    ctx.strokeRect(x + 4, y + 4, size - 8, size - 8);
+    const dot = Math.max(3, Math.floor(size / 6));
+    ctx.fillRect(x + (size - dot) / 2, y + (size - dot) / 2, dot, dot);
+    ctx.restore();
   }
 }
 
@@ -718,7 +750,7 @@ class App {
   }
 
   applyTheme(theme) {
-    const selectedTheme = THEME_COLORS[theme] ? theme : "modern";
+    const selectedTheme = THEME_COLORS[theme] ? theme : "gameboy";
     document.body.classList.toggle("theme-gameboy", selectedTheme === "gameboy");
     dom.themeSelect.value = selectedTheme;
     this.renderer.setTheme(selectedTheme);
