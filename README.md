@@ -214,6 +214,7 @@ GitHub Pages:
 ```text
 [https://USERNAME.github.io/tetris/](https://wh3r33.github.io/tetris/)
 ```
+https://wh3r33.github.io/tetris/
 
 # Known Limitations
 
