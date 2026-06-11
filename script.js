@@ -392,27 +392,36 @@ class TetrisGame {
   }
 
   startLineClear(rows) {
-    // Rows remain visible during a short flash; removal happens once the animation expires.
+    const animationRows = [...new Set(rows)].sort((a, b) => a - b);
+    // Snapshot the original row indexes for the flash; the board is not mutated until it ends.
     this.clearAnimation = {
-      rows,
+      rows: animationRows,
       startedAt: performance.now()
     };
-    this.audio.lineClear(rows.length);
+    this.audio.lineClear(animationRows.length);
   }
 
   finishLineClear() {
-    const rowsToRemove = new Set(this.clearAnimation.rows);
-    this.board = this.board.filter((_, index) => !rowsToRemove.has(index));
-    while (this.board.length < CONFIG.rows) {
-      this.board.unshift(Array(CONFIG.columns).fill(null));
-    }
+    if (!this.clearAnimation) return;
 
-    const cleared = rowsToRemove.size;
+    const clearedRows = this.clearAnimation.rows;
+    this.applyLineClear(clearedRows);
+
+    const cleared = clearedRows.length;
     this.lines += cleared;
     this.score += LINE_SCORES[cleared] * this.level;
     this.level = Math.floor(this.lines / 10) + 1;
     this.clearAnimation = null;
     this.advancePiece();
+  }
+
+  applyLineClear(rows) {
+    const rowsToRemove = new Set(rows);
+    const remainingRows = this.board.filter((_, index) => !rowsToRemove.has(index));
+    const emptyRows = Array.from({ length: rowsToRemove.size }, () => Array(CONFIG.columns).fill(null));
+
+    // Rebuild once from original indexes so multi-line clears cannot shift row references.
+    this.board = [...emptyRows, ...remainingRows].slice(-CONFIG.rows);
   }
 
   advancePiece() {
